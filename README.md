@@ -10,9 +10,11 @@ Open Neuromorphic_10 Jupyter notebook: https://colab.research.google.com/github/
 
 
 - [ ] See how cost influences Victor Purpura Metric (Lorenzo)
-- [ ] Augument Dataset (
-- [ ] Verify spatial robustness (Lorenzo)
-- [ ] Verify temporal robustness (Alfredo)
+- [ ] Augument Dataset ()
+- [ ] Clustering 
+- [ ] K-nn Classification
+- [ ] Verify temporal robustness (Lorenzo)
+- [ ] Verify spatial robustness (Alfredo)
 - [ ] Complete Slides at: https://docs.google.com/presentation/d/1u-G2tA7tQlBNZV6QBGzzzGBVBmZBRwW5UVy0OK1HauE/edit#slide=id.p
 
 
