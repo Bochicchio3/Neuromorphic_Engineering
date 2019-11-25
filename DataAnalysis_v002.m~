@@ -44,8 +44,7 @@ for channel = 1:16
       data_D(1:sum(index_D),channel) = section{186}(index_D,1);
       data_D(1:sum(index_D),channel) = data_D(1:sum(index_D),channel) - data_D(1,channel);
 end
-distance = zeros (size(section,2),5);
-null =  zeros(21,16); 
+distance = zeros (size(section,2),4);
 
 % for each session computes the VP distance on each channel and sums them
 % to obtain a cumulative one
@@ -58,9 +57,7 @@ for indentation = 1 :size(section,2)
         distance(indentation,1) = distance(indentation,1) + victor_purpura_distance_f(data(:,channel),data_A(:,channel),0.001);
         distance(indentation,2) = distance(indentation,2) + victor_purpura_distance_f(data(:,channel),data_B(:,channel),0.001);
         distance(indentation,3) = distance(indentation,3) + victor_purpura_distance_f(data(:,channel),data_C(:,channel),0.001);
-        distance(indentation,4) = distance(indentation,4) + victor_purpura_distance_f(data(:,channel),data_D(:,channel),0.001);distance(indentation,4) = distance(indentation,4) + victor_purpura_distance_f(data(:,channel),data_D(:,channel),0.001);
-        distance(indentation,5) = distance(indentation,5) + victor_purpura_distance_f(data(:,channel),null(:,channel),0.001);distance(indentation,4) = distance(indentation,4) + victor_purpura_distance_f(data(:,channel),data_D(:,channel),0.001);
-        
+        distance(indentation,4) = distance(indentation,4) + victor_purpura_distance_f(data(:,channel),data_D(:,channel),0.001);
     end
 end
 
@@ -69,30 +66,22 @@ end
 
 DistanceCountA = zeros(size(spike_count,1),2);
 DistanceCountA(:,1) = spike_count(:,9);
-DistanceCountA(:,2) = distance(:,1);
+DistanceCountA(:,1) = distance(:,1)
 DistanceCountB = zeros(size(spike_count,1),2);
 DistanceCountB(:,1) = spike_count(:,9);
-DistanceCountB(:,2) = distance(:,2);
+DistanceCountB(:,1) = distance(:,2)
 DistanceCountC = zeros(size(spike_count,1),2);
 DistanceCountC(:,1) = spike_count(:,9);
-DistanceCountC(:,2) = distance(:,3);
+DistanceCountC(:,1) = distance(:,3)
 DistanceCountD = zeros(size(spike_count,1),2);
 DistanceCountD(:,1) = spike_count(:,9);
-DistanceCountD(:,2) = distance(:,4);
-
-%% Clustering KKN
-
-opts = statset('Display','final');
-[idx,C] = kmeans(DistanceCountA,4,'Distance','cityblock','Replicates',5,'Options',opts);
-
-
+DistanceCountD(:,1) = distance(:,4)
 
 %% Plot results
 
 indNo = 1:size(distance,1);
 th = ones(size(distance,1))*2;
 
-fig2=figure();
 subplot(2,2,1)
 hold on
 patch([0 66 66 0], [65 65 0 0], 'r')
@@ -157,11 +146,3 @@ xlabel('Indentation session')
 title('Distance from probe D')
 hold off
 
-fig1 = figure();
-gscatter(DistanceCountA(:,1),DistanceCountA(:,2),idx,'mgcr')
-hold on
-plot(C(:,1),C(:,2),'kx')
-legend('Cluster 1','Cluster 2','Cluster 3','Cluster 4','Cluster Centroid')
-title('Clustering')
-xlabel('Spike count on channnel 9')
-ylabel('Victor purpura distance')
