@@ -53,14 +53,25 @@ for indentation = 1 :size(section,2)
     data = zeros(21,16);
     for channel = 1:16
         index = section{indentation}(:,2)==channel;
-        data(1:sum(index),channel) = section{indentation}(index,1) + rand(sum(index),1)*100;
+        data(1:sum(index),channel) = section{indentation}(index,1) + rand(sum(index),1)*0;
         data(1:sum(index),channel) = data(1:sum(index),channel) - data(1,channel); 
         distance(indentation,1) = distance(indentation,1) + victor_purpura_distance_f(data(:,channel),data_A(:,channel),0.001);
         distance(indentation,2) = distance(indentation,2) + victor_purpura_distance_f(data(:,channel),data_B(:,channel),0.001);
         distance(indentation,3) = distance(indentation,3) + victor_purpura_distance_f(data(:,channel),data_C(:,channel),0.001);
-        distance(indentation,4) = distance(indentation,4) + victor_purpura_distance_f(data(:,channel),data_D(:,channel),0.001);distance(indentation,4) = distance(indentation,4) + victor_purpura_distance_f(data(:,channel),data_D(:,channel),0.001);
-        distance(indentation,5) = distance(indentation,5) + victor_purpura_distance_f(data(:,channel),null(:,channel),0.001);distance(indentation,4) = distance(indentation,4) + victor_purpura_distance_f(data(:,channel),data_D(:,channel),0.001);
-        
+        distance(indentation,4) = distance(indentation,4) + victor_purpura_distance_f(data(:,channel),data_D(:,channel),0.001);
+        distance(indentation,5) = distance(indentation,5) + victor_purpura_distance_f(data(:,channel),null(:,channel),0.001);
+    end
+    if section{indentation}(1,5) == 1
+        label{indentation,1} = 'A';
+    end
+    if section{indentation}(1,5) == 2
+        label{indentation,1} = 'B';
+    end
+    if section{indentation}(1,5) == 3
+        label{indentation,1} = 'C';
+    end
+    if section{indentation}(1,5) == 4
+        label{indentation,1} = 'D';
     end
 end
 
@@ -79,13 +90,36 @@ DistanceCountC(:,2) = distance(:,3);
 DistanceCountD = zeros(size(spike_count,1),2);
 DistanceCountD(:,1) = spike_count(:,9);
 DistanceCountD(:,2) = distance(:,4);
+DistanceCountNull = zeros(size(spike_count,1),2);
+DistanceCountNull(:,1) = spike_count(:,9);
+DistanceCountNull(:,2) = distance(:,5);
+
 
 %% Clustering KKN
 
-opts = statset('Display','final');
-[idx,C] = kmeans(DistanceCountA,4,'Distance','cityblock','Replicates',5,'Options',opts);
+centroids = zeros(3,2);
+centroids(1,:) = DistanceCountNull(1,:);
+centroids(2,:) = DistanceCountNull(67,:);
+centroids(3,:) = DistanceCountNull(114,:);
+centroids(4,:) = DistanceCountNull(186,:);
+percentage = round(0.7*size(DistanceCountNull,1));
+s = RandStream('mt19937ar','Seed',0);
+indices(:,1) = randperm(s,size(DistanceCountNull,1));
+indices_train = indices(1:percentage);
+indices_test = indices(percentage+1:end);
+train_set = DistanceCountNull(indices_train,:);
+test_set = DistanceCountNull(indices_test,:);
 
-
+lda = fitcknn(train_set,label(indices_train));
+ldaClass = resubPredict(lda);
+ldaResubErr = resubLoss(lda);
+test_pred = predict(lda, test_set);
+bad = ~ strcmp(ldaClass,label(indices_train));
+x1range = min(DistanceCountNull(:,1))-2:.01:max(DistanceCountNull(:,1))+2;
+x2range = min(DistanceCountNull(:,2))-2:.01:max(DistanceCountNull(:,2))+2;
+[xx1, xx2] = meshgrid(x1range,x2range);
+XGrid = [xx1(:) xx2(:)];
+predictedspecies = predict(lda,XGrid);
 
 %% Plot results
 
@@ -158,10 +192,25 @@ title('Distance from probe D')
 hold off
 
 fig1 = figure();
-gscatter(DistanceCountA(:,1),DistanceCountA(:,2),idx,'mgcr')
+alpha(.3);
+f1 = gscatter(xx1(:), xx2(:), predictedspecies,'rgcm');
+ylim([min(DistanceCountNull(:,2))-1 max(DistanceCountNull(:,2))+1]);
+xlim([min(DistanceCountNull(:,1))-1 max(DistanceCountNull(:,1))+1]);
 hold on
-plot(C(:,1),C(:,2),'kx')
-legend('Cluster 1','Cluster 2','Cluster 3','Cluster 4','Cluster Centroid')
+plot(centroids(:,1),centroids(:,2),'k*')
+gscatter(DistanceCountNull(:,1),DistanceCountNull(:,2), label, 'brwc', 'osdp')
+plot(DistanceCountNull(bad,1),DistanceCountNull(bad,2), 'rx')
+legend('Cluster A','Cluster B','Cluster C','Cluster D')
 title('Clustering')
 xlabel('Spike count on channnel 9')
 ylabel('Victor purpura distance')
+
+
+figure;
+subplot(1,2,1)
+ldaResubCM = confusionchart(label(indices_train),ldaClass);
+title('Performance on Train-set')
+subplot(1,2,2)
+confusionchart(label(indices_test),test_pred);
+title('Performance on Test-set')
+
