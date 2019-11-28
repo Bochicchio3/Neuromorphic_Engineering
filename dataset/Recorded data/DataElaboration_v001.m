@@ -1,6 +1,6 @@
 clc
 clear all
-Data = xlsread('test_16channels_ProbeD_2.xlsx');
+Data = readtable('test_16channels_ProbeD_2.xlsx');
 
 figure;
 subplot(3,1,1);
